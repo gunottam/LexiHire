@@ -1,0 +1,69 @@
+Gunottam Maini
+ +91 8209891651 # mainigunottam@gmail.com
+ï LinkedIn
+§ Github
+Education
+Graphic Era Deemed to be University
+2023 – Present
+B.Tech in Computer Science & Engineering
+CGPA: 9.17/10 (Top 10% of Class)
+Indian Institute of Technology, Madras
+2024 – Present
+B.Sc in Data Science & Programming
+Online Mode
+St. Xavier’s School
+2023
+CBSE Higher Secondary School
+Percentage: 82.2%
+St. Xavier’s School
+2021
+CBSE Secondary School
+Percentage: 83.2%
+Patent
+A Detachable Automated Spikes Sole for Hiking and Trekking Shoes
+2024
+Application Number: 202411087314 A
+Work Experience
+Dotsquares Technologies | Jaipur
+Jan 2024 – Feb 2024
+Artificial Intelligence and Machine Learning Intern
+On-Site
+• Built and deployed an ML model for customer segmentation, boosting targeting accuracy by 25%.
+• Processed 50,000+ records using Python and Pandas, cutting data cleaning time by 30%.
+• Partnered with a 5-member team to deliver predictive analytics, increasing operational efficiency by 15%.
+Projects
+Behavioral Analysis-Based Customer Segmentation —Jan 2025
+Source Code
+• Segmented 50,000+ customers into 5 distinct clusters using K-Means Clustering, improving marketing campaign
+effectiveness by 30%.
+• Built a Random Forest Classifier with 100 trees, achieving 94% accuracy in predicting customer segments.
+• Reduced model prediction time by 15% through hyperparameter tuning and feature engineering.
+Spam Detection —Nov 2024
+Source Code
+• Developed a Naive Bayes model to classify 58,000 emails with 98% accuracy, reducing false positives to 1.3%.
+• Implemented text preprocessing techniques, improving model efficiency by 20%.
+• Achieved an average classification time of 0.5 seconds per email, enabling real-time spam filtering.
+Predictive Maintenance for Equipment —Dec 2024
+Source Code
+• Analyzed 100,000 maintenance logs to predict equipment failures with 83% accuracy, reducing downtime by 30%.
+• Engineered 10 key features from raw data, improving model performance by 20%.
+• Implemented a Random Forest Classifier to predict failures 72 hours in advance, cutting reactive maintenance
+costs by 25%.
+Technical Skills
+Languages: Python, C++, C, SQL
+Machine Learning Tools: Jupyter Notebook, Google Colab, Anaconda, Kaggle
+Machine Learning Libraries: Scikit-learn, TensorFlow, PyTorch, Pandas, NumPy, Matplotlib
+Developer Tools: VS Code, Git, GitHub, Docker
+Operating Systems: Windows, Linux, MacOS
+Honors and Awards
+Kindle Junior Coding Contest
+2024
+Ranked 3rd among 150+ participants for exceptional problem-solving skills.
+Python (Basic) Certification
+2023
+Earned HackerRank certification demonstrating proficiency in Python programming.
+SQL (Basic) Certification
+2023
+Achieved HackerRank certification showcasing expertise in SQL fundamentals.
+Solved the Chocolate Problem in Algo University Boothcamp
+2024
