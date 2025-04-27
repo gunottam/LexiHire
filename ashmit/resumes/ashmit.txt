@@ -1,0 +1,23 @@
+{
+    "skills": [
+        "Python",
+        "Flask",
+        "AWS",
+        "Docker",
+        "SQL"
+    ],
+    "education": [
+        "Bachelor of Technology in Computer Science",
+        "Indian Institute of Technology (IIT) Bombay",
+        "Graduated: 2022"
+    ],
+    "experience": [
+        "Software Engineer at Google India",
+        "July 2022 - Present",
+        "- Developed scalable backend systems using Python and Flask.",
+        "- Worked on cloud deployment with AWS."
+    ],
+    "certifications": [
+        "AWS Certified Solutions Architect"
+    ]
+}
