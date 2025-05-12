@@ -5,34 +5,18 @@ import './ResumeParser.css';
 const ResumeParser = () => {
   const [activeTab, setActiveTab] = useState('upload');
   const [parsedResumes, setParsedResumes] = useState([]);
-  
-  // Mock data for demonstration - you would retrieve this from your backend
-  const mockParsedData = [
-    {
-      id: 1,
-      fileName: "john_doe_resume.pdf",
-      name: "John Doe",
-      email: "john.doe@example.com",
-      phone: "+1 123-456-7890",
-      skills: ["JavaScript", "React", "Node.js"],
-      uploadDate: "2025-04-20"
-    },
-    {
-      id: 2,
-      fileName: "jane_smith_cv.pdf",
-      name: "Jane Smith",
-      email: "jane.smith@example.com",
-      phone: "+1 987-654-3210",
-      skills: ["Python", "Machine Learning", "Data Analysis"],
-      uploadDate: "2025-04-23"
-    }
-  ];
 
-  // Function to fetch parsed resumes (mocked for now)
-  const fetchParsedResumes = () => {
-    // In a real app, this would be an API call
-    setParsedResumes(mockParsedData);
-    setActiveTab('results');
+  const fetchParsedResumes = async () => {
+    try {
+      const response = await fetch("http://127.0.0.1:5000/resumes");
+      if (!response.ok) throw new Error("Failed to fetch parsed resumes.");
+      const data = await response.json();
+      setParsedResumes(data); // Backend should return a list of parsed resumes
+      setActiveTab('results');
+    } catch (error) {
+      console.error("Error fetching resumes:", error);
+      setParsedResumes([]); // Optional fallback
+    }
   };
 
   return (
@@ -94,7 +78,7 @@ const ResumeParser = () => {
                         <td>
                           <div className="candidate-info">
                             <div className="candidate-avatar">
-                              {resume.name.charAt(0)}
+                              {resume.name?.charAt(0) || "?"}
                             </div>
                             <div className="candidate-name">
                               {resume.name}
@@ -106,7 +90,7 @@ const ResumeParser = () => {
                         <td>{resume.phone}</td>
                         <td>
                           <div className="skills-list">
-                            {resume.skills.map((skill, index) => (
+                            {resume.skills?.map((skill, index) => (
                               <span key={index} className="skill-tag">
                                 {skill}
                               </span>

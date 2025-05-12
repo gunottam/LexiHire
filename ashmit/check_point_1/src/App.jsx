@@ -1,4 +1,3 @@
-// filepath: /Users/jaahnvisharma/Lexihire/jaahnvi/src/App.jsx
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Signup from './components/auth/Signup';
