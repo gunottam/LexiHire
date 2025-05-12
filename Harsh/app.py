@@ -2,6 +2,10 @@ from flask import Flask, request, render_template
 import os
 import fitz  # PyMuPDF
 import docx
+from flask_cors import CORS
+
+app = Flask(__name__)
+CORS(app, resources={r"/upload": {"origins": "http://your-frontend-url.com"}})
 
 app = Flask(__name__)
 UPLOAD_FOLDER = 'uploads'
