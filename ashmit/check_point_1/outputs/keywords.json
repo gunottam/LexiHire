@@ -1,0 +1,152 @@
+[
+  {
+    "keyword": "Data Analysis",
+    "priority": 0,
+    "weight": 0.99
+  },
+  {
+    "keyword": "SQL",
+    "priority": 1,
+    "weight": 0.98
+  },
+  {
+    "keyword": "Python",
+    "priority": 2,
+    "weight": 0.97
+  },
+  {
+    "keyword": "Data Visualization",
+    "priority": 3,
+    "weight": 0.96
+  },
+  {
+    "keyword": "Statistical Analysis",
+    "priority": 4,
+    "weight": 0.95
+  },
+  {
+    "keyword": "Data Mining",
+    "priority": 5,
+    "weight": 0.94
+  },
+  {
+    "keyword": "Machine Learning",
+    "priority": 6,
+    "weight": 0.93
+  },
+  {
+    "keyword": "R",
+    "priority": 7,
+    "weight": 0.92
+  },
+  {
+    "keyword": "Excel",
+    "priority": 8,
+    "weight": 0.91
+  },
+  {
+    "keyword": "Tableau",
+    "priority": 9,
+    "weight": 0.9
+  },
+  {
+    "keyword": "Data Modeling",
+    "priority": 10,
+    "weight": 0.89
+  },
+  {
+    "keyword": "Data Warehousing",
+    "priority": 11,
+    "weight": 0.88
+  },
+  {
+    "keyword": "ETL",
+    "priority": 12,
+    "weight": 0.87
+  },
+  {
+    "keyword": "Big Data",
+    "priority": 13,
+    "weight": 0.86
+  },
+  {
+    "keyword": "Hadoop",
+    "priority": 14,
+    "weight": 0.85
+  },
+  {
+    "keyword": "Spark",
+    "priority": 15,
+    "weight": 0.84
+  },
+  {
+    "keyword": "Cloud Computing",
+    "priority": 16,
+    "weight": 0.83
+  },
+  {
+    "keyword": "AWS",
+    "priority": 17,
+    "weight": 0.82
+  },
+  {
+    "keyword": "Azure",
+    "priority": 18,
+    "weight": 0.81
+  },
+  {
+    "keyword": "Data Governance",
+    "priority": 19,
+    "weight": 0.8
+  },
+  {
+    "keyword": "Communication",
+    "priority": 20,
+    "weight": 0.79
+  },
+  {
+    "keyword": "Problem-Solving",
+    "priority": 21,
+    "weight": 0.78
+  },
+  {
+    "keyword": "Critical Thinking",
+    "priority": 22,
+    "weight": 0.77
+  },
+  {
+    "keyword": "Business Intelligence",
+    "priority": 23,
+    "weight": 0.76
+  },
+  {
+    "keyword": "SAS",
+    "priority": 24,
+    "weight": 0.75
+  },
+  {
+    "keyword": "Data Storytelling",
+    "priority": 25,
+    "weight": 0.74
+  },
+  {
+    "keyword": "A/B Testing",
+    "priority": 26,
+    "weight": 0.73
+  },
+  {
+    "keyword": "Experiment Design",
+    "priority": 27,
+    "weight": 0.72
+  },
+  {
+    "keyword": "Google Analytics",
+    "priority": 28,
+    "weight": 0.71
+  },
+  {
+    "keyword": "Data Cleaning",
+    "priority": 29,
+    "weight": 0.7
+  }
+]

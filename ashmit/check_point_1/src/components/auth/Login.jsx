@@ -18,7 +18,9 @@ const Login = () => {
     
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      navigate('/dashboard'); // Navigate to dashboard after successful login
+      localStorage.setItem("isAuthenticated", "true");
+window.location.href = "/dashboard/upload"; // or use useNavigate
+
     } catch (error) {
       setError(error.message);
       console.error("Login error:", error);

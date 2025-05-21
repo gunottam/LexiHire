@@ -1,35 +1,31 @@
 from flask import Flask, request, jsonify
 import spacy
-nlp = spacy.load("en_core_web_sm")
-import os
-import fitz  # PyMuPDF
-import docx
-from flask_cors import CORS
 import json
+import fitz
+import docx
+from io import BytesIO
+from flask_cors import CORS
 from tokenizer import ResumeTokenizer
 from parser_service import ResumeParser
-from keyword_generator import generate_keywords  # ✅ Import from external file
+from keyword_generator import generate_keywords
+from databas.resume_store import clear_resume_table, insert_ranked_resumes
+from databas.resume_store import get_ranked_resumes
+from supabase_utils.supabase_client import supabase
 
 app = Flask(__name__)
 CORS(app)
 
-UPLOAD_FOLDER = 'uploads'
-OUTPUT_FOLDER = 'outputs'
+nlp = spacy.load("en_core_web_sm")
 
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-os.makedirs(OUTPUT_FOLDER, exist_ok=True)
-
-# ============================== #
-# TEXT EXTRACTION LOGIC
-# ============================== #
-def extract_text(file_path):
+def extract_text(file_bytes, filename):
     text = ''
-    if file_path.endswith('.pdf'):
-        doc = fitz.open(file_path)
+    if filename.endswith('.pdf'):
+        doc = fitz.open(stream=file_bytes, filetype='pdf')
         for page in doc:
             text += page.get_text()
-    elif file_path.endswith('.docx'):
-        doc = docx.Document(file_path)
+    elif filename.endswith('.docx'):
+        buffer = BytesIO(file_bytes)
+        doc = docx.Document(buffer)
         for para in doc.paragraphs:
             text += para.text
     return text
@@ -40,193 +36,145 @@ def clean_text(text):
         token.lemma_ for token in doc
         if not token.is_stop and token.is_alpha
     ])
-# ============================== #
-# ROUTE: UPLOAD
-# ============================== #
+
+def clear_supabase_bucket(bucket_name="resumes"):
+    objects = supabase.storage.from_(bucket_name).list()
+    if objects:
+        supabase.storage.from_(bucket_name).remove([obj["name"] for obj in objects])
+
 @app.route('/upload', methods=['POST'])
 def upload_files():
     files = request.files.getlist('files')
+    job_role = request.form.get('jobRole', '').strip()
     response_data = []
 
+    if not job_role:
+        return jsonify({"status": "error", "message": "Job role is required"}), 400
+
+    # Save job role
+    with open("current_job_role.txt", "w", encoding="utf-8") as f:
+        f.write(job_role)
+
+    # Clear old DB and storage
+    clear_resume_table()
+    clear_supabase_bucket()
+
     for file in files:
-        if file:
-            filename = file.filename
-            save_path = os.path.join(UPLOAD_FOLDER, filename)
-            file.save(save_path)
+        filename = file.filename
+        file_bytes = file.read()
 
-            text = extract_text(save_path)
+        # ✅ Upload original file to 'originals/'
+        supabase.storage.from_("resumes").update(
+            f"originals/{filename}",
+            file_bytes,
+            {"content-type": file.mimetype}
+        )
 
-            output_filename = f"{os.path.splitext(filename)[0]}.txt"
-            output_path = os.path.join(OUTPUT_FOLDER, output_filename)
+        # ✅ Prepare text path
+        output_filename = filename.rsplit(".", 1)[0] + ".txt"
+        text_path = f"text/{output_filename}"
 
-            with open(output_path, 'w', encoding='utf-8') as f:
-                f.write(text)
+        # ✅ Try deleting if it exists
+        try:
+            supabase.storage.from_("resumes").remove([text_path])
+        except Exception as e:
+            print(f"File may not exist yet, skipping delete: {e}")
 
-            response_data.append({
-                'filename': filename,
-                'text_output': output_filename
-            })
+        # ✅ Extract text from file
+        text = extract_text(file_bytes, filename)
+
+        # ✅ Upload extracted text
+        supabase.storage.from_("resumes").upload(
+            text_path,
+            text.encode("utf-8"),
+            {"content-type": "text/plain"}
+        )
+
+        # ✅ Add to response
+        response_data.append({
+            "filename": filename,
+            "text_output": output_filename
+        })
 
     return jsonify({"status": "success", "data": response_data})
 
-# ============================== #
-# ROUTE: PROCESS (parse resumes)
-# ============================== #
+
 @app.route('/process', methods=['POST'])
 def process_text():
-    folder_path = OUTPUT_FOLDER
+    try:
+        with open("current_job_role.txt", "r", encoding="utf-8") as f:
+            job_role = f.read().strip()
+    except FileNotFoundError:
+        return jsonify({"status": "error", "message": "Job role not specified."}), 400
+
     processed_files = []
+    text_files = supabase.storage.from_("resumes").list("text")
 
-    for filename in os.listdir(folder_path):
-        if filename.endswith(".txt"):
-            file_path = os.path.join(folder_path, filename)
-            print(f"Processing {filename}...")
+    for obj in text_files:
+        filename = obj["name"]
+        if not filename.endswith(".txt"):
+            continue
 
-            with open(file_path, 'r', encoding='utf-8') as file:
-                resume_text = file.read()
+        response = supabase.storage.from_("resumes").download(f"text/{filename}")
 
-            tokenizer = ResumeTokenizer(resume_text)
-            tokens = tokenizer.tokenize()
+        resume_text = response.decode("utf-8")
 
-            parser = ResumeParser(tokens)
-            symbol_table = parser.parse()
-            
-                        # Preprocess symbol table fields
-            for key, value in symbol_table.items():
-                if isinstance(value, str):
-                    symbol_table[key] = clean_text(value)
-                elif isinstance(value, list):
-                    symbol_table[key] = [clean_text(item) if isinstance(item, str) else item for item in value]
 
-            modified_content = json.dumps(symbol_table, indent=4)
+        tokenizer = ResumeTokenizer(resume_text)
+        tokens = tokenizer.tokenize()
+        parser = ResumeParser(tokens)
+        symbol_table = parser.parse()
 
-            with open(file_path, 'w', encoding='utf-8') as file:
-                file.write(modified_content)
+        for key, value in symbol_table.items():
+            if isinstance(value, str):
+                symbol_table[key] = clean_text(value)
+            elif isinstance(value, list):
+                symbol_table[key] = [clean_text(item) if isinstance(item, str) else item for item in value]
 
-            processed_files.append({
-                'filename': filename,
-                'status': 'processed'
-            })
-
-            print(f"Done processing {filename} ✅\n")
-    
-    generate_keywords("CLoud Engineer", os.path.join(OUTPUT_FOLDER, "keywords.json"))
-    
-    score_resumes()
-
-    return jsonify({"status": "success", "processed_files": processed_files})
-
-# ============================== #
-# ROUTE: GENERATE KEYWORDS
-# ============================== #
-@app.route('/generate-keywords', methods=['GET'])
-def generate_keywords_route():
-    job_title = "Cloud Engineer"  # Can later make this dynamic
-    print("hello")
-    output_path = os.path.join(os.path.dirname(__file__), "outputs", "keywords.json")
-
-    result = generate_keywords(job_title, output_path)
-
-    if result["status"] == "success":
-        return jsonify({
-            "status": "success",
-            "message": f"Keywords generated for job title '{job_title}'",
-            "keywords_file": "keywords.json",  # Just filename since it's local
-            "keywords": result["keywords"]
+        processed_files.append({
+            "filename": filename,
+            "status": "processed",
+            "symbol_table": symbol_table
         })
-    else:
-        return jsonify({
-            "status": "error",
-            "message": result["message"]
-        }), 500
-        
-@app.route('/score', methods=['GET'])
-def score_resumes():
-    keyword_path = os.path.join(OUTPUT_FOLDER, "keywords.json")
-    if not os.path.exists(keyword_path):
-        return jsonify({"status": "error", "message": "keywords.json not found"}), 400
 
-    with open(keyword_path, 'r', encoding='utf-8') as f:
-        keyword_list = json.load(f)
-    keyword_map = {k['keyword'].lower(): k['weight'] for k in keyword_list}
+    keyword_list = generate_keywords(job_role)["keywords"]
+    keyword_map = {k["keyword"].lower(): k["weight"] for k in keyword_list}
     max_possible_score = sum(keyword_map.values())
 
-    scored_resumes = []
+    ranked = []
+    for item in processed_files:
+        flat_text = json.dumps(item["symbol_table"]).lower()
+        score = sum(flat_text.count(k) * w for k, w in keyword_map.items())
+        norm_score = round(score / max_possible_score, 4)
+        ranked.append({
+            "filename": item["filename"],
+            "raw_score": score,
+            "normalized_score": norm_score
+        })
 
-    for filename in os.listdir(OUTPUT_FOLDER):
-        if filename.endswith(".txt") and filename != "keywords.json":
-            file_path = os.path.join(OUTPUT_FOLDER, filename)
-            with open(file_path, 'r', encoding='utf-8') as f:
-                symbol_table = json.load(f)
+    ranked.sort(key=lambda x: x["normalized_score"], reverse=True)
 
-            flat_text = json.dumps(symbol_table).lower()
-            score = 0.0
+    clear_resume_table()
+    insert_ranked_resumes(ranked, job_role)
 
-            for keyword, weight in keyword_map.items():
-                count = flat_text.count(keyword)
-                score += count * weight
+    return jsonify({"status": "success", "rankings": ranked})
 
-            normalized_score = round(score / max_possible_score, 4)
-            scored_resumes.append({
-                "filename": filename,
-                "raw_score": score,
-                "normalized_score": normalized_score
-            })
+@app.route('/rankings', methods=['GET'])
+def get_rankings():
+    try:
+        rankings = get_ranked_resumes()
+        print(f"DEBUG: Rankings fetched: {rankings}")  # Debug print
 
-    # Sort and rename files
-    scored_resumes.sort(key=lambda x: x['normalized_score'], reverse=True)
+        if not rankings:
+            return jsonify({"status": "error", "message": "No rankings found"}), 404
 
-    for i, resume in enumerate(scored_resumes, 1):
-        old_path = os.path.join(OUTPUT_FOLDER, resume["filename"])
-        new_name = f"{i:02d}_score{resume['normalized_score']}_{resume['filename']}"
-        new_path = os.path.join(OUTPUT_FOLDER, new_name)
-        os.rename(old_path, new_path)
-        resume['ranked_filename'] = new_name
-
-    with open(os.path.join(OUTPUT_FOLDER, "ranking.json"), 'w', encoding='utf-8') as f:
-        json.dump(scored_resumes, f, indent=4)
-        
-    reorder_uploads_by_ranking()
-
-
-    return jsonify({"status": "success", "rankings": scored_resumes})
-
-def reorder_uploads_by_ranking():
-    ranking_path = os.path.join(OUTPUT_FOLDER, "ranking.json")
-    if not os.path.exists(ranking_path):
-        print("❌ ranking.json not found.")
-        return
-
-    with open(ranking_path, 'r', encoding='utf-8') as f:
-        ranked_resumes = json.load(f)
-
-    upload_files = os.listdir(UPLOAD_FOLDER)
-
-    for resume in ranked_resumes:
-        original_txt_name = resume["filename"]
-        original_base_name = os.path.splitext(original_txt_name)[0].lower()
-
-        matching_file = None
-        for file in upload_files:
-            file_base = os.path.splitext(file)[0].lower()
-            if file_base == original_base_name:
-                matching_file = file
-                break
-
-        if matching_file:
-            rank_prefix = resume["ranked_filename"].split("_")[0]  # e.g., "01"
-            new_name = f"{rank_prefix}_{matching_file}"
-            old_path = os.path.join(UPLOAD_FOLDER, matching_file)
-            new_path = os.path.join(UPLOAD_FOLDER, new_name)
-            os.rename(old_path, new_path)
-            print(f"✅ Renamed: {matching_file} ➝ {new_name}")
-        else:
-            print(f"⚠️ No match found in uploads for: {original_txt_name}")
+        return jsonify({"status": "success", "rankings": rankings})
+    except Exception as e:
+        print(f"ERROR in /rankings: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 
 
-# ============================== #
-# RUN SERVER
-# ============================== #
+
 if __name__ == '__main__':
     app.run(debug=True)
