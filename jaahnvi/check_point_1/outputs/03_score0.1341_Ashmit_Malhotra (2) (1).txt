@@ -1,0 +1,22 @@
+{
+    "skills": [
+        "language C Java Python R HTML CSS JavaScript",
+        "Tools Frameworks Numpy Streamlit LATEX",
+        "Machine Learning Tools Tensorflow Keras scikit learn",
+        "scholastic achievement",
+        "Smart India National Round problem statement Smart",
+        "automation work Automation Street Lights",
+        "Participation actively participate submit abstract",
+        "sium Robotics Automation Digital Agriculture qualify second round",
+        "participate Hackon compete Hackon Amazon Cleared",
+        "code round have Data structure question solve problem",
+        "position RESPONSIBILITY",
+        "volunteer WCDM Nov Dec participate active member World Congress",
+        "Disaster Management WCDM",
+        "National Service Scheme Oct mar volunteer member NSS hold b level",
+        "certification field"
+    ],
+    "education": [],
+    "experience": [],
+    "certifications": []
+}
