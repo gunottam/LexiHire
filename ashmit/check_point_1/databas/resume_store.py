@@ -2,8 +2,6 @@ from databas.db import get_connection
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
-from databas.db import get_connection
-
 def get_ranked_resumes():
     conn = get_connection()
     cursor = conn.cursor()
@@ -29,6 +27,7 @@ def clear_resume_table():
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("TRUNCATE TABLE resumes")
+    print("cleaned the table")
     conn.commit()
     cur.close()
     conn.close()

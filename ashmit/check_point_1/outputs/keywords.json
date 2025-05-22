@@ -1,151 +1,151 @@
 [
   {
-    "keyword": "Data Analysis",
+    "keyword": "AWS Certified Solutions Architect",
     "priority": 0,
     "weight": 0.99
   },
   {
-    "keyword": "SQL",
+    "keyword": "Microsoft Certified Azure Solutions Architect Expert",
     "priority": 1,
     "weight": 0.98
   },
   {
-    "keyword": "Python",
+    "keyword": "Google Cloud Certified Professional Cloud Architect",
     "priority": 2,
     "weight": 0.97
   },
   {
-    "keyword": "Data Visualization",
+    "keyword": "Terraform",
     "priority": 3,
     "weight": 0.96
   },
   {
-    "keyword": "Statistical Analysis",
+    "keyword": "Kubernetes",
     "priority": 4,
     "weight": 0.95
   },
   {
-    "keyword": "Data Mining",
+    "keyword": "Docker",
     "priority": 5,
     "weight": 0.94
   },
   {
-    "keyword": "Machine Learning",
+    "keyword": "Ansible",
     "priority": 6,
     "weight": 0.93
   },
   {
-    "keyword": "R",
+    "keyword": "CloudFormation",
     "priority": 7,
     "weight": 0.92
   },
   {
-    "keyword": "Excel",
+    "keyword": "Azure DevOps",
     "priority": 8,
     "weight": 0.91
   },
   {
-    "keyword": "Tableau",
+    "keyword": "Jenkins",
     "priority": 9,
     "weight": 0.9
   },
   {
-    "keyword": "Data Modeling",
+    "keyword": "Python",
     "priority": 10,
     "weight": 0.89
   },
   {
-    "keyword": "Data Warehousing",
+    "keyword": "Java",
     "priority": 11,
     "weight": 0.88
   },
   {
-    "keyword": "ETL",
+    "keyword": "Go",
     "priority": 12,
     "weight": 0.87
   },
   {
-    "keyword": "Big Data",
+    "keyword": "Linux",
     "priority": 13,
     "weight": 0.86
   },
   {
-    "keyword": "Hadoop",
+    "keyword": "Networking",
     "priority": 14,
     "weight": 0.85
   },
   {
-    "keyword": "Spark",
+    "keyword": "Security",
     "priority": 15,
     "weight": 0.84
   },
   {
-    "keyword": "Cloud Computing",
+    "keyword": "Database Management",
     "priority": 16,
     "weight": 0.83
   },
   {
-    "keyword": "AWS",
+    "keyword": "CI/CD",
     "priority": 17,
     "weight": 0.82
   },
   {
-    "keyword": "Azure",
+    "keyword": "Monitoring",
     "priority": 18,
     "weight": 0.81
   },
   {
-    "keyword": "Data Governance",
+    "keyword": "Troubleshooting",
     "priority": 19,
     "weight": 0.8
   },
   {
-    "keyword": "Communication",
+    "keyword": "Automation",
     "priority": 20,
     "weight": 0.79
   },
   {
-    "keyword": "Problem-Solving",
+    "keyword": "Scripting",
     "priority": 21,
     "weight": 0.78
   },
   {
-    "keyword": "Critical Thinking",
+    "keyword": "System Administration",
     "priority": 22,
     "weight": 0.77
   },
   {
-    "keyword": "Business Intelligence",
+    "keyword": "Agile Methodologies",
     "priority": 23,
     "weight": 0.76
   },
   {
-    "keyword": "SAS",
+    "keyword": "Cloud Security",
     "priority": 24,
     "weight": 0.75
   },
   {
-    "keyword": "Data Storytelling",
+    "keyword": "Disaster Recovery",
     "priority": 25,
     "weight": 0.74
   },
   {
-    "keyword": "A/B Testing",
+    "keyword": "Cost Optimization",
     "priority": 26,
     "weight": 0.73
   },
   {
-    "keyword": "Experiment Design",
+    "keyword": "Compliance",
     "priority": 27,
     "weight": 0.72
   },
   {
-    "keyword": "Google Analytics",
+    "keyword": "Serverless Computing",
     "priority": 28,
     "weight": 0.71
   },
   {
-    "keyword": "Data Cleaning",
+    "keyword": "Microservices",
     "priority": 29,
     "weight": 0.7
   }
