@@ -1,8 +1,8 @@
 // src/App.jsx
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import Signup from "./components/auth/signup";
-import Login from "./components/auth/login";
+import Signup from "./components/auth/Signup.jsx";
+import Login from "./components/auth/Login.jsx";
 import ResumeUpload from "./components/dashboard/ResumeUpload.jsx";
 // import ParsedResults from './components/dashboard/ParsedResults.jsx';
 import DashboardLayout from "./components/layout/DashboardLayout.jsx";

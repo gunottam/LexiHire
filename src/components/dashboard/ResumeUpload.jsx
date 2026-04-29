@@ -1,12 +1,32 @@
 import React, { useState } from "react";
 import { apiUrl } from "../../api.js";
-import "./ResumeUpload.css";
+import {
+  FileText,
+  Loader2,
+  Download,
+  ChevronDown,
+  Sparkles,
+  Search,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 
 const WORKFLOW_TEMPLATE = [
   {
     key: "upload",
-    label: "Uploading Resumes",
-    detail: "Sending selected resume files to backend storage.",
+    label: "Uploading resumes",
+    detail: "Sending selected files to the server.",
     status: "pending",
     time: null,
   },
@@ -14,7 +34,7 @@ const WORKFLOW_TEMPLATE = [
     key: "compile",
     label: "Compile & analyze",
     detail:
-      "Lexer → parser → semantic → IR → optimization → scoring (runs on the server for each resume).",
+      "Lexer → parser → semantic → IR → optimization → scoring (per resume).",
     status: "pending",
     time: null,
   },
@@ -27,27 +47,27 @@ const WORKFLOW_TEMPLATE = [
   },
 ];
 
-const cloneWorkflowTemplate = () =>
-  WORKFLOW_TEMPLATE.map((step) => ({ ...step }));
+const cloneWorkflowTemplate = () => WORKFLOW_TEMPLATE.map((step) => ({ ...step }));
 
 const ScoreBar = ({ score, max, label }) => {
-  const pct = max > 0 ? (score / max) * 100 : 0;
-  let colorClass = "score-bar-green";
-  if (pct < 40) colorClass = "score-bar-red";
-  else if (pct < 70) colorClass = "score-bar-yellow";
+  const pct = max > 0 ? Math.min(100, (score / max) * 100) : 0;
+  const fill =
+    pct < 40 ? "bg-primary" : pct < 70 ? "bg-accent" : "bg-plum";
 
   return (
-    <div className="score-bar-row">
-      <span className="score-bar-label">{label}</span>
-      <div className="score-bar-track">
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between text-xs">
+        <span className="font-medium text-foreground">{label}</span>
+        <span className="tabular-nums text-muted-foreground">
+          {score}/{max}
+        </span>
+      </div>
+      <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
         <div
-          className={`score-bar-fill ${colorClass}`}
+          className={cn("h-full rounded-full transition-all duration-500", fill)}
           style={{ width: `${pct}%` }}
         />
       </div>
-      <span className="score-bar-value">
-        {score}/{max}
-      </span>
     </div>
   );
 };
@@ -61,36 +81,58 @@ const DiagnosticsPanel = ({ diagnostics }) => {
   const infos = diagnostics.filter((d) => d.severity === "info");
 
   return (
-    <div className="diagnostics-panel">
+    <div className="mt-4 rounded-lg border border-border/80 bg-muted/20">
       <button
-        className="diagnostics-toggle"
+        type="button"
         onClick={() => setExpanded(!expanded)}
+        className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-foreground transition-colors hover:bg-muted/60"
       >
-        <span className="diagnostics-icon">🔍</span>
-        Compiler Diagnostics
-        {errors.length > 0 && (
-          <span className="diag-badge diag-error">{errors.length} error{errors.length > 1 ? "s" : ""}</span>
-        )}
-        {warnings.length > 0 && (
-          <span className="diag-badge diag-warning">{warnings.length} warning{warnings.length > 1 ? "s" : ""}</span>
-        )}
-        {infos.length > 0 && (
-          <span className="diag-badge diag-info">{infos.length} info</span>
-        )}
-        <span className={`chevron ${expanded ? "open" : ""}`}>▸</span>
+        <Search className="size-4 shrink-0 text-plum" aria-hidden />
+        <span className="flex-1">Compiler diagnostics</span>
+        {errors.length > 0 ? (
+          <Badge variant="destructive" className="font-normal">
+            {errors.length} err
+          </Badge>
+        ) : null}
+        {warnings.length > 0 ? (
+          <Badge variant="outline" className="border-primary/40 text-primary">
+            {warnings.length} warn
+          </Badge>
+        ) : null}
+        {infos.length > 0 ? (
+          <Badge variant="secondary" className="font-normal">
+            {infos.length} info
+          </Badge>
+        ) : null}
+        <ChevronDown
+          className={cn(
+            "size-4 shrink-0 text-muted-foreground transition-transform",
+            expanded && "rotate-180",
+          )}
+          aria-hidden
+        />
       </button>
-      {expanded && (
-        <ul className="diagnostics-list">
+      {expanded ? (
+        <ul className="max-h-56 space-y-1 overflow-y-auto border-t border-border/60 px-3 py-2 text-xs">
           {diagnostics.map((d, i) => (
-            <li key={i} className={`diag-item diag-${d.severity}`}>
-              <span className="diag-severity">{d.severity.toUpperCase()}</span>
-              <span className="diag-phase">[{d.phase}]</span>
-              {d.line && <span className="diag-line">L{d.line}</span>}
-              <span className="diag-msg">{d.message}</span>
+            <li
+              key={i}
+              className={cn(
+                "rounded-md px-2 py-1.5 font-mono leading-relaxed",
+                d.severity === "error" && "bg-destructive/10 text-destructive",
+                d.severity === "warning" &&
+                  "bg-primary/5 text-primary",
+                d.severity === "info" && "bg-muted text-muted-foreground",
+              )}
+            >
+              <span className="font-semibold uppercase">{d.severity}</span>{" "}
+              <span className="text-muted-foreground">[{d.phase}]</span>{" "}
+              {d.line ? <span>L{d.line} </span> : null}
+              {d.message}
             </li>
           ))}
         </ul>
-      )}
+      ) : null}
     </div>
   );
 };
@@ -212,12 +254,11 @@ const ResumeUpload = () => {
         updateWorkflowStep("upload", "completed");
         setUploadStatus({
           success: true,
-          message: `Successfully uploaded ${uploadedCount} resume${uploadedCount > 1 ? "s" : ""}!`,
+          message: `Uploaded ${uploadedCount} resume${uploadedCount > 1 ? "s" : ""}.`,
         });
         setFiles([]);
         setJobRole("");
 
-        // Single server round-trip runs the full pipeline; keep one UI step in progress.
         updateWorkflowStep("compile", "in-progress");
 
         const processRes = await fetch(apiUrl("/process"), {
@@ -240,10 +281,7 @@ const ResumeUpload = () => {
           let rankings = Array.isArray(processData.rankings)
             ? processData.rankings
             : [];
-          if (
-            rankings.length === 0 &&
-            details.length > 0
-          ) {
+          if (rankings.length === 0 && details.length > 0) {
             rankings = details.map((d) => ({
               filename: d.filename,
               raw_score: d.score?.total_score ?? 0,
@@ -300,7 +338,7 @@ const ResumeUpload = () => {
         success: false,
         message:
           error?.message ||
-          "Network error — start Flask (`python app.py`) and keep Vite dev server running.",
+          "Network error — start Flask (`python app.py`) and keep Vite running.",
       });
     } finally {
       setIsUploading(false);
@@ -311,268 +349,378 @@ const ResumeUpload = () => {
     window.open(apiUrl("/download-ranked-resumes"), "_blank", "noopener,noreferrer");
   };
 
-  const getScoreColor = (normalized) => {
-    if (normalized >= 0.7) return "score-high";
-    if (normalized >= 0.4) return "score-medium";
-    return "score-low";
+  const getScoreRingClass = (normalized) => {
+    if (normalized >= 0.7) return "ring-accent/60 bg-accent/10 text-accent-foreground";
+    if (normalized >= 0.4)
+      return "ring-primary/35 bg-primary/5 text-foreground";
+    return "ring-border bg-muted text-muted-foreground";
   };
 
   const showWorkflow =
     isUploading || workflowSteps.some((step) => step.status !== "pending");
 
-  // Find detail for a given filename
   const getDetail = (filename) =>
     detailedResults.find((d) => d.filename === filename);
 
+  const workflowBadge = (status) => {
+    if (status === "completed")
+      return (
+        <Badge variant="wasabi" className="font-normal">
+          Done
+        </Badge>
+      );
+    if (status === "in-progress")
+      return (
+        <Badge variant="secondary" className="font-normal">
+          Running
+        </Badge>
+      );
+    if (status === "error")
+      return (
+        <Badge variant="destructive" className="font-normal">
+          Failed
+        </Badge>
+      );
+    return (
+      <Badge variant="outline" className="font-normal text-muted-foreground">
+        Pending
+      </Badge>
+    );
+  };
+
   return (
-    <div className="resume-upload-container">
-      <div className="resume-upload-card">
-        <div className="resume-upload-header">
-          <h2>Upload Resumes</h2>
-          <p>Select or drag and drop resume files for compiler analysis</p>
-        </div>
+    <div className="animate-fade-in space-y-8">
+      <div className="space-y-1">
+        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-plum">
+          Workspace
+        </p>
+        <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+          Upload & compile
+        </h1>
+        <p className="max-w-2xl text-sm text-muted-foreground sm:text-base">
+          Drop PDFs or Word files, set the role, and run the full compiler
+          pipeline — then explore ranked results in one calm view.
+        </p>
+      </div>
 
-        {uploadStatus && (
-          <div
-            className={`upload-status ${uploadStatus.success ? "success" : "error"}`}
-          >
-            {uploadStatus.message}
+      <Card className="overflow-hidden border-border/70 shadow-sm shadow-plum/5">
+        <CardHeader className="border-b border-border/60 bg-card pb-4">
+          <div className="flex items-start gap-3">
+            <div className="flex size-10 items-center justify-center rounded-lg bg-secondary text-plum">
+              <Sparkles className="size-5" aria-hidden />
+            </div>
+            <div>
+              <CardTitle className="text-lg sm:text-xl">New batch</CardTitle>
+              <CardDescription>
+                Job role drives keyword extraction and scoring against each resume.
+              </CardDescription>
+            </div>
           </div>
-        )}
+        </CardHeader>
+        <CardContent className="space-y-6 pt-6">
+          {uploadStatus ? (
+            <Alert variant={uploadStatus.success ? "success" : "destructive"}>
+              <AlertDescription>{uploadStatus.message}</AlertDescription>
+            </Alert>
+          ) : null}
 
-        {showWorkflow && (
-          <div className="workflow-panel">
-            <h3>Compiler Pipeline</h3>
-            <ul className="workflow-list">
-              {workflowSteps.map((step) => (
-                <li
-                  key={step.key}
-                  className={`workflow-item workflow-${step.status}`}
-                >
-                  <span className="workflow-dot" />
-                  <div className="workflow-content">
-                    <p className="workflow-title">{step.label}</p>
-                    <p className="workflow-detail">{step.detail}</p>
-                  </div>
-                  <span className="workflow-meta">
-                    {step.status === "in-progress" ? "In progress" : null}
-                    {step.status === "completed" && step.time
-                      ? `Done ${step.time}`
-                      : null}
-                    {step.status === "error" && step.time
-                      ? `Failed ${step.time}`
-                      : null}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+          {showWorkflow ? (
+            <div className="rounded-xl border border-border/70 bg-muted/25 p-4">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Compiler pipeline
+              </p>
+              <ul className="space-y-3">
+                {workflowSteps.map((step) => (
+                  <li
+                    key={step.key}
+                    className="flex flex-wrap items-center gap-3 rounded-lg border border-border/50 bg-card/80 px-3 py-2.5"
+                  >
+                    <span
+                      className={cn(
+                        "size-2 shrink-0 rounded-full",
+                        step.status === "completed" && "bg-accent",
+                        step.status === "in-progress" && "bg-primary animate-pulse",
+                        step.status === "error" && "bg-destructive",
+                        step.status === "pending" && "bg-muted-foreground/30",
+                      )}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-foreground">
+                        {step.label}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {step.detail}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 flex-col items-end gap-1 text-right">
+                      {workflowBadge(step.status)}
+                      {step.time ? (
+                        <span className="text-[11px] text-muted-foreground">
+                          {step.time}
+                        </span>
+                      ) : null}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
 
-        <form
-          onSubmit={handleSubmit}
-          className="resume-upload-form"
-          onDragEnter={handleDrag}
-        >
-          <div className="job-role-input">
-            <label htmlFor="jobRole">Enter Job Role:</label>
-            <input
-              type="text"
-              id="jobRole"
-              value={jobRole}
-              onChange={(e) => setJobRole(e.target.value)}
-              placeholder="e.g., Frontend Developer"
-              required
-            />
-          </div>
-
-          <div
-            className={`file-drop-area ${dragActive ? "active" : ""} ${files.length > 0 ? "has-files" : ""}`}
+          <form
+            className="space-y-6"
+            onSubmit={handleSubmit}
             onDragEnter={handleDrag}
-            onDragLeave={handleDrag}
-            onDragOver={handleDrag}
-            onDrop={handleDrop}
           >
-            <div className="file-input-container">
+            <div className="space-y-2">
+              <Label htmlFor="jobRole">Job role</Label>
+              <Input
+                id="jobRole"
+                value={jobRole}
+                onChange={(e) => setJobRole(e.target.value)}
+                placeholder="e.g. Senior frontend engineer"
+                required
+              />
+            </div>
+
+            <div
+              className={cn(
+                "relative rounded-xl border-2 border-dashed transition-colors",
+                dragActive
+                  ? "border-accent bg-accent/10"
+                  : files.length > 0
+                    ? "border-plum/40 bg-secondary/40"
+                    : "border-border bg-muted/15 hover:border-plum/35 hover:bg-muted/25",
+              )}
+              onDragEnter={handleDrag}
+              onDragLeave={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
+            >
               <input
                 type="file"
                 id="resumeFiles"
                 onChange={handleFileChange}
                 multiple
                 accept=".pdf,.doc,.docx"
-                className="file-input"
+                className="absolute inset-0 z-10 cursor-pointer opacity-0"
                 name="files"
               />
-              <label htmlFor="resumeFiles" className="file-label">
-                <div className="upload-icon">📄</div>
-                <span className="upload-text">
+              <div className="pointer-events-none flex flex-col items-center gap-2 px-6 py-12 text-center">
+                <div className="flex size-12 items-center justify-center rounded-full bg-card shadow-sm ring-1 ring-border">
+                  <FileText className="size-6 text-plum" aria-hidden />
+                </div>
+                <p className="text-sm font-medium text-foreground">
                   {files.length > 0
                     ? `${files.length} file${files.length > 1 ? "s" : ""} selected`
-                    : "Choose files or drag them here"}
-                </span>
-              </label>
+                    : "Drop files here or click to browse"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  PDF, DOC, DOCX — multiple files supported
+                </p>
+              </div>
             </div>
 
-            {files.length > 0 && (
-              <div className="file-list">
-                <h4>Selected Files:</h4>
-                <ul>
+            {files.length > 0 ? (
+              <div className="rounded-lg border border-border/60 bg-card/50 px-3 py-3">
+                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Selected
+                </p>
+                <ul className="max-h-36 space-y-1.5 overflow-y-auto text-sm">
                   {files.map((file, index) => (
-                    <li key={index} className="file-item">
-                      <span className="file-name">{file.name}</span>
-                      <span className="file-size">
-                        ({(file.size / 1024).toFixed(1)} KB)
+                    <li
+                      key={`${file.name}-${index}`}
+                      className="flex justify-between gap-2 rounded-md px-2 py-1 hover:bg-muted/50"
+                    >
+                      <span className="truncate font-medium text-foreground">
+                        {file.name}
+                      </span>
+                      <span className="shrink-0 tabular-nums text-xs text-muted-foreground">
+                        {(file.size / 1024).toFixed(1)} KB
                       </span>
                     </li>
                   ))}
                 </ul>
               </div>
-            )}
-          </div>
+            ) : null}
 
-          <button
-            type="submit"
-            className={`upload-button ${isUploading ? "loading" : ""}`}
-            disabled={isUploading}
-          >
-            {isUploading ? <span className="spinner"></span> : "Upload & Compile"}
-          </button>
-        </form>
+            <Button type="submit" className="w-full sm:w-auto" disabled={isUploading}>
+              {isUploading ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  Working…
+                </>
+              ) : (
+                <>
+                  <Sparkles className="size-4" />
+                  Upload & compile
+                </>
+              )}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
 
-        {/* Ranked Output Section */}
-        {rankedResumes.length > 0 && (
-          <div className="parsed-results-container">
-            <h3>Ranked Resumes</h3>
-            <div className="ranked-cards">
-              {rankedResumes.map((resume, index) => {
-                const detail = getDetail(resume.filename);
-                const isExpanded = expandedResume === index;
-                const normalized = resume.normalized_score ?? resume.score ?? 0;
-                const totalScore = resume.raw_score ?? (normalized * 100);
-
-                return (
-                  <div
-                    key={index}
-                    className={`ranked-card ${getScoreColor(normalized)}`}
-                  >
-                    <div
-                      className="ranked-card-header"
-                      onClick={() =>
-                        setExpandedResume(isExpanded ? null : index)
-                      }
-                    >
-                      <div className="rank-badge">#{index + 1}</div>
-                      <div className="ranked-card-info">
-                        <span className="ranked-filename">
-                          {resume.filename}
-                        </span>
-                        <span className="ranked-score-label">
-                          Score: {formatScore(totalScore)}/100
-                        </span>
-                      </div>
-                      <div className="ranked-score-circle">
-                        <span>{Math.round(normalized * 100)}%</span>
-                      </div>
-                      <span className={`chevron ${isExpanded ? "open" : ""}`}>
-                        ▸
-                      </span>
-                    </div>
-
-                    {isExpanded && detail && (
-                      <div className="ranked-card-detail">
-                        {/* Score Breakdown */}
-                        {detail.score?.breakdown && (
-                          <div className="score-breakdown">
-                            <h4>Score Breakdown</h4>
-                            <ScoreBar
-                              score={detail.score.breakdown.skills?.score ?? 0}
-                              max={detail.score.breakdown.skills?.max ?? 40}
-                              label="Skills"
-                            />
-                            <ScoreBar
-                              score={detail.score.breakdown.experience?.score ?? 0}
-                              max={detail.score.breakdown.experience?.max ?? 30}
-                              label="Experience"
-                            />
-                            <ScoreBar
-                              score={detail.score.breakdown.education?.score ?? 0}
-                              max={detail.score.breakdown.education?.max ?? 15}
-                              label="Education"
-                            />
-                            <ScoreBar
-                              score={detail.score.breakdown.structure?.score ?? 0}
-                              max={detail.score.breakdown.structure?.max ?? 15}
-                              label="Structure"
-                            />
-                          </div>
-                        )}
-
-                        {/* Matched & Missing Skills */}
-                        {detail.score?.breakdown?.skills && (
-                          <div className="skills-match-panel">
-                            {detail.score.breakdown.skills.matched?.length > 0 && (
-                              <div className="skills-matched">
-                                <h5>✅ Matched Skills</h5>
-                                <div className="skill-tags">
-                                  {detail.score.breakdown.skills.matched.map(
-                                    (s, i) => (
-                                      <span key={i} className="skill-tag matched">
-                                        {s}
-                                      </span>
-                                    ),
-                                  )}
-                                </div>
-                              </div>
-                            )}
-                            {detail.score.breakdown.skills.missing?.length > 0 && (
-                              <div className="skills-missing">
-                                <h5>❌ Missing Skills</h5>
-                                <div className="skill-tags">
-                                  {detail.score.breakdown.skills.missing.map(
-                                    (s, i) => (
-                                      <span key={i} className="skill-tag missing">
-                                        {s}
-                                      </span>
-                                    ),
-                                  )}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Phase Timings */}
-                        {detail.phases && (
-                          <div className="phase-timings">
-                            <h5>⏱ Pipeline Timings</h5>
-                            <div className="timing-chips">
-                              {Object.entries(detail.phases)
-                                .filter(([k]) => k !== "total_ms")
-                                .map(([phase, ms]) => (
-                                  <span key={phase} className="timing-chip">
-                                    {phase.replace("_ms", "")}: {ms}ms
-                                  </span>
-                                ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Diagnostics */}
-                        <DiagnosticsPanel
-                          diagnostics={detail.diagnostics}
-                        />
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+      {rankedResumes.length > 0 ? (
+        <section className="space-y-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 className="font-display text-2xl font-semibold tracking-tight">
+                Ranked resumes
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Tap a row to expand score breakdown and diagnostics.
+              </p>
             </div>
-            <button onClick={handleDownload} className="download-button">
-              Download Ranked Resumes (ZIP)
-            </button>
+            <Button variant="plum" onClick={handleDownload} className="gap-2">
+              <Download className="size-4" />
+              Download ZIP
+            </Button>
           </div>
-        )}
-      </div>
+
+          <div className="space-y-3">
+            {rankedResumes.map((resume, index) => {
+              const detail = getDetail(resume.filename);
+              const isExpanded = expandedResume === index;
+              const normalized = resume.normalized_score ?? resume.score ?? 0;
+              const totalScore = resume.raw_score ?? normalized * 100;
+
+              return (
+                <Card
+                  key={`${resume.filename}-${index}`}
+                  className={cn(
+                    "overflow-hidden border-border/70 transition-shadow",
+                    isExpanded && "shadow-md ring-1 ring-plum/15",
+                  )}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setExpandedResume(isExpanded ? null : index)}
+                    className="flex w-full items-center gap-3 px-4 py-4 text-left transition-colors hover:bg-muted/30 sm:px-5"
+                  >
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-plum text-sm font-bold text-plum-foreground">
+                      {index + 1}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-medium text-foreground">
+                        {resume.filename}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Score {formatScore(totalScore)}/100
+                      </p>
+                    </div>
+                    <div
+                      className={cn(
+                        "flex size-12 shrink-0 items-center justify-center rounded-full text-sm font-semibold ring-2 ring-offset-2 ring-offset-background",
+                        getScoreRingClass(normalized),
+                      )}
+                    >
+                      {Math.round(normalized * 100)}%
+                    </div>
+                    <ChevronDown
+                      className={cn(
+                        "size-5 shrink-0 text-muted-foreground transition-transform",
+                        isExpanded && "rotate-180",
+                      )}
+                      aria-hidden
+                    />
+                  </button>
+
+                  {isExpanded && detail ? (
+                    <div className="space-y-4 border-t border-border/60 bg-muted/10 px-4 py-5 sm:px-5">
+                      {detail.score?.breakdown ? (
+                        <div className="space-y-3">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                            Score breakdown
+                          </p>
+                          <ScoreBar
+                            score={detail.score.breakdown.skills?.score ?? 0}
+                            max={detail.score.breakdown.skills?.max ?? 40}
+                            label="Skills"
+                          />
+                          <ScoreBar
+                            score={detail.score.breakdown.experience?.score ?? 0}
+                            max={detail.score.breakdown.experience?.max ?? 30}
+                            label="Experience"
+                          />
+                          <ScoreBar
+                            score={detail.score.breakdown.education?.score ?? 0}
+                            max={detail.score.breakdown.education?.max ?? 15}
+                            label="Education"
+                          />
+                          <ScoreBar
+                            score={detail.score.breakdown.structure?.score ?? 0}
+                            max={detail.score.breakdown.structure?.max ?? 15}
+                            label="Structure"
+                          />
+                        </div>
+                      ) : null}
+
+                      {detail.score?.breakdown?.skills ? (
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          {detail.score.breakdown.skills.matched?.length > 0 ? (
+                            <div className="rounded-lg border border-accent/30 bg-accent/5 p-3">
+                              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-accent-foreground">
+                                Matched skills
+                              </p>
+                              <div className="flex flex-wrap gap-1.5">
+                                {detail.score.breakdown.skills.matched.map((s, i) => (
+                                  <Badge key={i} variant="wasabi" className="font-normal">
+                                    {s}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          ) : null}
+                          {detail.score.breakdown.skills.missing?.length > 0 ? (
+                            <div className="rounded-lg border border-primary/25 bg-primary/5 p-3">
+                              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-primary">
+                                Missing skills
+                              </p>
+                              <div className="flex flex-wrap gap-1.5">
+                                {detail.score.breakdown.skills.missing.map((s, i) => (
+                                  <Badge
+                                    key={i}
+                                    variant="outline"
+                                    className="border-primary/40 font-normal text-primary"
+                                  >
+                                    {s}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          ) : null}
+                        </div>
+                      ) : null}
+
+                      {detail.phases ? (
+                        <div>
+                          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                            Pipeline timings
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {Object.entries(detail.phases)
+                              .filter(([k]) => k !== "total_ms")
+                              .map(([phase, ms]) => (
+                                <span
+                                  key={phase}
+                                  className="rounded-md border border-border bg-card px-2 py-1 font-mono text-[11px] text-muted-foreground"
+                                >
+                                  {phase.replace("_ms", "")}: {ms}ms
+                                </span>
+                              ))}
+                          </div>
+                        </div>
+                      ) : null}
+
+                      <DiagnosticsPanel diagnostics={detail.diagnostics} />
+                    </div>
+                  ) : null}
+                </Card>
+              );
+            })}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 };

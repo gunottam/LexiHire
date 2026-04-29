@@ -49,4 +49,3 @@ python app.py
 ## Notes
 
 The repository now excludes runtime artifacts, local scratch files, and sample resume assets so the codebase stays focused on the actual product.
-
