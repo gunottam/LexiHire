@@ -1,13 +1,52 @@
-# React + Vite
+# LexiHire
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+LexiHire is a resume screening and ranking platform built to help recruiters quickly extract, analyze, and compare candidate resumes against a target role. The app combines a React + Vite frontend with a Flask-based backend pipeline for parsing, scoring, and ranking resumes.
 
-Currently, two official plugins are available:
+## What It Does
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Upload PDF or DOCX resumes and extract text automatically.
+- Match resume content against the selected job role.
+- Rank candidates through the compiler-inspired processing pipeline.
+- Present results through a clean dashboard experience.
 
-## Expanding the ESLint configuration
+## Tech Stack
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
- 
+- Frontend: React, Vite, React Router
+- Backend: Flask, PyMuPDF, python-docx
+- Processing: custom tokenizer, parser, semantic analysis, scoring, and optimization pipeline
+- Storage: Supabase integration for uploaded files and extracted text
+
+## Getting Started
+
+### Frontend
+
+```bash
+npm install
+npm run dev
+```
+
+### Backend
+
+```bash
+pip install -r requirements.txt
+python app.py
+```
+
+## Project Structure
+
+- `src/` - frontend pages, layout, and components
+- `app.py` - Flask API for uploads and processing
+- `compiler/` - tokenization, parsing, semantic analysis, scoring, and optimization
+- `databas/` - resume ranking persistence helpers
+- `supabase_utils/` - Supabase client setup
+
+## Team
+
+- Gunottam - Team Lead
+- Ananya Garg
+- Prableen Kaur
+
+## Notes
+
+The repository now excludes runtime artifacts, local scratch files, and sample resume assets so the codebase stays focused on the actual product.
+

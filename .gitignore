@@ -13,6 +13,12 @@ dist-ssr
 *.local
 *.env
 _last_upload_text_files.json
+current_job_role.txt
+resume/
+untitled folder/
+.python-version
+__pycache__/
+**/__pycache__/
 
 # Editor directories and files
 .vscode/*
