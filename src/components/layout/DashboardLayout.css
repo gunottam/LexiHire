@@ -1,0 +1,16 @@
+.dashboard-shell {
+  min-height: 100vh;
+  position: relative;
+}
+
+.dashboard-main {
+  padding: 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .dashboard-main {
+    padding: 0.5rem;
+  }
+}
